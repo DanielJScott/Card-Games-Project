@@ -1,4 +1,3 @@
-
 function generateDeck() {
     //These are the presets for cards that can be dealt
     const suits = ["Hearts", "Spades", "Clubs", "Diamonds"];
@@ -104,13 +103,21 @@ const blackjack = {
             return "The " + person + " score was over 21.  Bust.";
         } else if (this[person].score === 21) {
             return this.finale(person);
+        } else {
+            return "The " + person + " score is " + (21 - this[person].score) + " under 21.";
         }
     },
      //when both players have settled on their hand, this will run.
      finale: function (person) {
-
-         if (person === "dealer")
-
+         if (person === "dealer") {
+             if (this[person].score >= this.player.score && this.player.score <= 21) {
+                 return "Dealer wins";
+             } else if (this.player.score > 21 && this[person].score >= this.player.score) {
+                 return "Dealer wins"
+             } else {
+                 return "Player wins!";
+             }
+         }
          if (this[person].score > this.dealer.score && this[person].score <= 21) {
              return "Player wins!";
          } else {
@@ -120,12 +127,3 @@ const blackjack = {
 //need to write additional statements determining which player has the highest
 //score under 21
 }
-
-
-blackjack.deal();
-console.log("Player has " + blackjack.player.cards);
-console.log("Dealer has " + blackjack.dealer.cards);
-blackjack.hit("player");
-console.log("Player has " + blackjack.player.cards);
-console.log(blackjack._scoreChecker("player"));
-console.log(blackjack.finale("player"));
