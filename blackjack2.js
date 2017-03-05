@@ -29,101 +29,145 @@ function generateDeck() {
     return deck;
 }
 
+function addPlayers (num) {
+    if (isNaN(num)) {
+        throw new Error("Invalid value passed to addPlayer()!  Must be a number.")
+    }
+
+    const players = [];
+
+    for (let i = 0 ; i <= num ; i ++) {
+        if (i === 0 ) {
+            const player = {
+                name: "dealer",
+                cards: [],
+                points: [],
+                score: 0
+            };
+            players.push(player);
+        } else {
+            const player = {
+                name: "player" + i,
+                cards: [],
+                points: [],
+                score: 0
+            };
+            players.push(player);
+        }
+    }
+    return players;
+}
+
 
 const blackjack = {
     //This is the array containing the cards in the deck.
     deck: generateDeck(),
     //These are the player and dealer objects cards can be dealt to
     //These will be replaced with a constructor which allows any number of players to join in.
-    player: {
-        cards: [],
-        points: [],
-        score: 0
-    },
-
-    dealer:{
-        cards: [],
-        points: [],
-        score: 0
-    },
+    table: addPlayers(3),
       //This will tackle additional cards being dealt to the players.
-    hit: function( person) {
+    hit: function(seat) {
 
-        if (person !== 'dealer' && person !== 'player') {
+        if (isNaN(seat)) {
             throw new Error('Invalid value passed to blackjack.hit()!')
+        } else if (seat >= this.table.length) {
+            throw new Error('Value was greater than number of players!')
         }
 
-        this._deal(person);
-        this._scoreCalculator(person);
-        this._scoreChecker(person);
+
+        this._deal(seat);
+        this._scoreCalculator(seat);
+        this._scoreChecker(seat);
 
     },
 
 
-    _deal: function(person) {
+    _deal: function(seat) {
         const card = Math.floor(Math.random() * this.deck.length);
-        this[person].cards.push(this.deck[card].name);
-        this[person].points.push(this.deck[card].value);
+        this.table[seat].cards.push(this.deck[card].name);
+        this.table[seat].points.push(this.deck[card].value);
         this.deck.splice(card, 1);
-        this._scoreCalculator(person);
+        this._scoreCalculator(seat);
     },
 
     deal: function() {
-        for (let i = 0 ; i < 2 ; i++) {
-            this._deal("dealer");
-            this._scoreCalculator("dealer");
-            this._scoreChecker("dealer");
-            this._deal("player");
-            this._scoreCalculator("player");
-            this._scoreChecker("player");
-
-
+        for (let i = 0 ; i < this.table.length ; i ++) {
+            for (let n = 0 ; n < 2 ; n ++) {
+                this._deal(i);
+            }
         }
     },
         //this will tally up the player's points
-    _scoreCalculator: function(person) {
+    _scoreCalculator: function(seat) {
         const add = function (a, b) {
             return a + b;
         };
-        this[person].score = this[person].points.reduce(add);
-        if (this[person].score > 21) {
-            for (let i = 0; i < this[person].points.length ; i ++) {
-                if (this[person].points[i] === 11) {
-                    return this[person].points[i] = 1
+        this.table[seat].score = this.table[seat].points.reduce(add);
+        if (this.table[seat].score > 21) {
+            for (let i = 0; i < this.table[seat].points.length ; i ++) {
+                if (this.table[seat].points[i] === 11) {
+                    return this.table[seat].points[i] = 1
                 }
             }
-            return this[person].score = this[person].points.reduce(add);
+            return this.table[seat].score = this.table[seat].points.reduce(add);
         }
 
     },
         //This checks the players scores.  If someone has exceeded the score,
         //the player will lose the game.
-    _scoreChecker: function (person) {
-        if (this[person].score > 21) {
-            return "The " + person + " score was over 21.  Bust.";
-        } else if (this[person].score === 21) {
-            return this.finale(person);
-        } else {
-            return "The " + person + " score is " + (21 - this[person].score) + " under 21.";
-        }
-    },
-     //when both players have settled on their hand, this will run.
-     finale: function (person) {
-         if (person === "dealer") {
-             if (this[person].score >= this.player.score && this.player.score <= 21) {
-                 return "Dealer wins";
-             } else if (this.player.score > 21 && this[person].score >= this.player.score) {
-                 return "Dealer wins"
-             } else {
-                 return "Player wins!";
+        _scoreChecker: function (seat) {
+            if (this.table[seat].score > 21) {
+                return "Player" + seat + " score was over 21.  Bust.";
+            } else if (this.table[seat].score === 21) {
+                return this.finale(seat);
+            } else {
+                return "Player" + seat + " score is " + this.table[seat].score + ".";
+            }
+        },
+         //when both players have settled on their hand, this will run.
+         finale: function () {
+             let winner;
+             let lead;
+             let multi = [];
+             let base = 0;
+             if (this.table[0].score <= 21) {
+                 lead = 0;
+                 base = this.table[0].score;
              }
+             for (let i = 1 ; i < this.table.length ; i ++) {
+                 if (this.table[i].score > base && this.table[i].score <= 21) {
+                     lead = i;
+                     base = this.table[i].score;
+                 } else if (this.table[i].score >= base && this.table[i].score <= 21 && lead === 0) {
+                     lead = 0;
+                 } else if (this.table[i].score === base && lead != 0) {
+                     multi.push(i);
+                     if (multi.indexOf(lead) === -1) {
+                         multi.push(lead);
+                     }
+                 }
+             }
+             if (multi.length > 0 && this.table[lead].score > this.table[multi[0]].score){
+                 winner = this.table[lead].name;
+             } else if (multi.length > 0 && this.table[multi[0]].score >= this.table[lead].score){
+                 winner = "Players " + multi.join(", ");
+             } else {
+                 winner = this.table[lead].name;
+             }
+             return winner;
          }
-         if (this[person].score > this.dealer.score && this[person].score <= 21) {
-             return "Player wins!";
-         } else {
-             return "Dealer wins";
-         }
-     }
-//need to write additional statements determining which player has the highest
-//score under 21
+    //need to write additional statements determining which player has the highest
+    //score under 21
 }
+
+
+blackjack.deal();
+console.log("Player 1 has " + blackjack.table[1].cards);
+console.log(blackjack._scoreChecker(1));
+console.log("Player 2 has " + blackjack.table[2].cards);
+console.log(blackjack._scoreChecker(2));
+console.log("Player 3 has " + blackjack.table[3].cards);
+console.log(blackjack._scoreChecker(3));
+console.log("Dealer has " + blackjack.table[0].cards);
+console.log(blackjack._scoreChecker(0));
+console.log(blackjack.finale() + " wins!");
