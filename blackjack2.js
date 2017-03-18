@@ -29,6 +29,20 @@ function generateDeck() {
     return deck;
 }
 
+function Player (name) {
+    this.name=name;
+    this.cards = [];
+    this.points = [];
+    this.score = 0
+    this.hit = function () {
+        blackjack.hit(blackjack.table.indexOf(this));
+    }
+    this.joinTable = function (){
+        blackjack.table.push(this);
+    }
+
+}
+
 function addPlayers (num) {
     if (isNaN(num)) {
         throw new Error("Invalid value passed to addPlayer()!  Must be a number.")
@@ -38,33 +52,23 @@ function addPlayers (num) {
 
     for (let i = 0 ; i <= num ; i ++) {
         if (i === 0 ) {
-            const player = {
-                name: "dealer",
-                cards: [],
-                points: [],
-                score: 0
-            };
-            players.push(player);
+            players.push(new Player("Dealer"));
+
         } else {
-            const player = {
-                name: "player" + i,
-                cards: [],
-                points: [],
-                score: 0
-            };
-            players.push(player);
+            players.push(new Player("Player " + i));
         }
     }
     return players;
 }
 
 
+let playerNum = 3;
 const blackjack = {
     //This is the array containing the cards in the deck.
     deck: generateDeck(),
     //These are the player and dealer objects cards can be dealt to
     //These will be replaced with a constructor which allows any number of players to join in.
-    table: addPlayers(3),
+    table: addPlayers(playerNum),
       //This will tackle additional cards being dealt to the players.
     hit: function(seat) {
 
@@ -154,20 +158,12 @@ const blackjack = {
              } else {
                  winner = this.table[lead].name;
              }
-             return winner;
+             return winner + " has won this hand.";
          }
     //need to write additional statements determining which player has the highest
     //score under 21
 }
 
 
+playerNum = 3;
 blackjack.deal();
-console.log("Player 1 has " + blackjack.table[1].cards);
-console.log(blackjack._scoreChecker(1));
-console.log("Player 2 has " + blackjack.table[2].cards);
-console.log(blackjack._scoreChecker(2));
-console.log("Player 3 has " + blackjack.table[3].cards);
-console.log(blackjack._scoreChecker(3));
-console.log("Dealer has " + blackjack.table[0].cards);
-console.log(blackjack._scoreChecker(0));
-console.log(blackjack.finale() + " wins!");
